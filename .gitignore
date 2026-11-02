@@ -1,0 +1,12 @@
+venv/
+.freebuff/
+__pycache__/
+pollen_key.txt
+ui_requests.log
+projects/
+*.bak*
+*.py.*bak*
+*.swp
+dumped_body.json
+logs.txt
+.username.json

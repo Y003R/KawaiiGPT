@@ -1,0 +1,7 @@
+#!/bin/sh
+# Runs after `git pull` / `git merge` so an upstream update cannot silently
+# revert this fork's patches. git runs hooks from the repo root.
+root=$(git rev-parse --show-toplevel 2>/dev/null) || exit 0
+cd "$root" || exit 0
+[ -f repatch.py ] || exit 0
+python3 repatch.py
