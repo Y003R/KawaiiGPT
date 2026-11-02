@@ -1,0 +1,24 @@
+#!/bin/sh
+# Pre-push gate: nothing leaves this machine unless it compiles, the patch layer
+# is consistent, and the refusal bench still passes.
+#   SKIP_BENCH=1 git push     skip the slow part
+root=$(git rev-parse --show-toplevel 2>/dev/null) || exit 0
+cd "$root" || exit 0
+py=./venv/bin/python
+[ -x "$py" ] || py=python3
+
+for f in kawai.py engine.py prompts.py project.py kawaii_ui.py repatch.py bench.py; do
+  [ -f "$f" ] && { "$py" -m py_compile "$f" || { echo "pre-push: $f does not compile"; exit 1; }; }
+done
+rm -rf __pycache__
+
+# patches/patched.py must match what is about to ship
+if [ -f patches/patched.py ]; then
+  "$py" repatch.py --check >/dev/null 2>&1 || {
+    echo "pre-push: kawai.py and patches/patched.py disagree - run: python repatch.py --save"
+    exit 1; }
+fi
+
+[ -n "${SKIP_BENCH:-}" ] && exit 0
+echo "pre-push: running refusal bench (~3 min)…"
+"$py" bench.py || { echo "pre-push: bench failed"; exit 1; }
